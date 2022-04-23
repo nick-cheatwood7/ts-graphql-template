@@ -12,6 +12,7 @@ import session from "express-session";
 import connectRedis from "connect-redis";
 import { __prod__ } from "./utils/constants";
 import { MyContext } from "./utils/types";
+// import cors from "cors";
 
 const main = async () => {
   const orm = await MikroORM.init(mikroConfig);
@@ -22,8 +23,14 @@ const main = async () => {
 
   const RedisStore = connectRedis(session);
   const redisClient = createClient({ legacyMode: true });
-  redisClient.connect().catch(console.error);
+  redisClient
+    .connect()
+    .then(() => {
+      console.log("✨ Redis started");
+    })
+    .catch(console.error);
 
+  !__prod__ && app.set("trust proxy", 1);
   app.use(
     session({
       name: "qid",
@@ -34,8 +41,8 @@ const main = async () => {
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: true,
-        sameSite: __prod__ ? "lax" : "none", //csrf
-        secure: true, // only works in https
+        sameSite: "lax", //csrf
+        secure: __prod__, // only works in https
       },
       saveUninitialized: false,
       secret: process.env.SESSION_SECRET || "",
@@ -52,12 +59,10 @@ const main = async () => {
   });
 
   await server.start();
-  server.applyMiddleware({
-    app,
-  });
+  server.applyMiddleware({ app });
 
   app.listen(port, () => {
-    console.log(`✨  Express server listening on http://localhost:${port}`);
+    console.log(`✨ Express server listening on http://localhost:${port}`);
   });
 };
 

@@ -47,10 +47,21 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() { em, req }: MyContext) {
+    const userId = req.session.userId;
+    // User not logged in
+    if (!userId) {
+      return null;
+    }
+    const user = await em.findOne(User, { id: userId });
+    return user;
+  }
+
   @Mutation(() => UserResponse, { nullable: true })
   async register(
     @Arg("options") options: UserRegisterInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     if (options.email.length < 3) {
       return {
@@ -114,6 +125,8 @@ export class UserResolver {
         };
       }
     }
+    // Authenticate user
+    req.session.userId = user.id;
     return { user };
   }
 
@@ -151,6 +164,17 @@ export class UserResolver {
     return {
       user,
     };
+  }
+
+  @Mutation(() => Boolean)
+  async logout(@Ctx() { req }: MyContext) {
+    const userId = req.session.userId;
+    // User not logged in
+    if (!userId) {
+      return false;
+    }
+    req.session.destroy(() => {});
+    return true;
   }
 
   @Query(() => User, { nullable: true })
