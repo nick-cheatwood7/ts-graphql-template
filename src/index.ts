@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { MikroORM } from "@mikro-orm/core";
+import { MikroORM, EntityManager } from "@mikro-orm/core";
 import mikroConfig from "./mikro-orm.config";
 import express, { Express } from "express";
 import "dotenv-safe/config";
@@ -12,11 +12,18 @@ import session from "express-session";
 import connectRedis from "connect-redis";
 import { __prod__ } from "./utils/constants";
 import { MyContext } from "./utils/types";
-// import cors from "cors";
+import cors from "cors";
+import { createUserLoader } from "./loaders/UserLoader";
+
+export const DI = {} as {
+  orm: MikroORM;
+  em: EntityManager;
+};
 
 const main = async () => {
-  const orm = await MikroORM.init(mikroConfig);
-  await orm.getMigrator().up();
+  DI.orm = await MikroORM.init(mikroConfig);
+  DI.em = DI.orm.em;
+  await DI.orm.getMigrator().up();
 
   const app: Express = express();
   const port = parseInt(process.env.PORT) || 3000;
@@ -26,11 +33,17 @@ const main = async () => {
   redisClient
     .connect()
     .then(() => {
-      console.log("✨ Redis started");
+      console.log("✨ Redis db started");
     })
     .catch(console.error);
 
   !__prod__ && app.set("trust proxy", 1);
+  app.use(
+    cors({
+      origin: "*",
+      credentials: true,
+    })
+  );
   app.use(
     session({
       name: "qid",
@@ -55,11 +68,16 @@ const main = async () => {
       resolvers: [HelloResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }): MyContext => ({ em: orm.em, req, res }),
+    context: ({ req, res }): MyContext => ({
+      em: DI.orm.em,
+      req,
+      res,
+      userLoader: createUserLoader(),
+    }),
   });
 
   await server.start();
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app, cors: false });
 
   app.listen(port, () => {
     console.log(`✨ Express server listening on http://localhost:${port}`);
