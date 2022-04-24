@@ -21,9 +21,8 @@ export const DI = {} as {
 };
 
 const main = async () => {
-  DI.orm = await MikroORM.init(mikroConfig);
-  DI.em = DI.orm.em;
-  await DI.orm.getMigrator().up();
+  const orm = await MikroORM.init(mikroConfig);
+  await orm.getMigrator().up();
 
   const app: Express = express();
   const port = parseInt(process.env.PORT) || 3000;
@@ -69,10 +68,10 @@ const main = async () => {
       validate: false,
     }),
     context: ({ req, res }): MyContext => ({
-      em: DI.orm.em,
+      em: orm.em.fork(),
       req,
       res,
-      userLoader: createUserLoader(),
+      userLoader: createUserLoader(orm),
     }),
   });
 
