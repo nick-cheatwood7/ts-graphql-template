@@ -1,22 +1,26 @@
-import { Entity, Property } from "@mikro-orm/core";
+import { Entity, Column } from "typeorm";
 import { Field, ObjectType } from "type-graphql";
-import { BaseEntity } from "./templates/BaseEntity";
+import { CustomEntity } from "./templates/CustomEntity";
 
 @ObjectType()
-@Entity({ tableName: "users" })
-export class User extends BaseEntity {
+@Entity({ name: "users" })
+export class User extends CustomEntity {
   @Field()
-  @Property()
-  firstName!: string;
+  @Column()
+  firstName: string;
 
   @Field()
-  @Property()
-  lastName!: string;
+  @Column()
+  lastName: string;
 
   @Field()
-  @Property({ unique: true })
-  email!: string;
+  @Column({ unique: true })
+  email: string;
 
-  @Property({ type: "text", hidden: true })
-  password!: string;
+  @Column("text")
+  password: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  lastLogin?: Date;
 }
