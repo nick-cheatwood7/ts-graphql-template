@@ -15,6 +15,10 @@ export class Book extends CustomEntity {
   @Column()
   year: number;
 
+  @Field()
+  @Column({ nullable: true })
+  authorId: string;
+
   @ManyToOne(() => Author, (author) => author.books)
   author: Author;
 

@@ -10,6 +10,7 @@ import {
 } from "type-graphql";
 import { Book } from "../entities/Book";
 import { BaseResponse } from "../utils/types";
+import db from "../db";
 
 @ObjectType()
 class BookResponse extends BaseResponse {
@@ -63,7 +64,7 @@ export class BookResolver {
 
   // Find Book
   @Query(() => Book, { nullable: true })
-  async getBook(@Arg("id") id: string): Promise<Book | null> {
+  async book(@Arg("id") id: string): Promise<Book | null> {
     return await Book.findOneBy({ id: id });
   }
 
@@ -106,7 +107,19 @@ export class BookResolver {
 
   // List all Books
   @Query(() => [Book], { nullable: true })
-  async getBooks(): Promise<Book[] | undefined> {
-    return Book.find();
+  async getBooks(
+    @Arg("limit") limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
+  ): Promise<Book[]> {
+    const realLimit = Math.min(50, limit); // cap list at 50
+    const qb = db
+      .getRepository(Book)
+      .createQueryBuilder("b")
+      .orderBy('"createdAt"', "DESC")
+      .take(realLimit);
+    if (cursor) {
+      qb.where('"createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) }); // convert string to timestamp
+    }
+    return qb.getMany();
   }
 }

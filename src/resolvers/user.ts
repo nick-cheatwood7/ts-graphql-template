@@ -7,10 +7,12 @@ import {
   ObjectType,
   Query,
   Resolver,
+  UseMiddleware,
 } from "type-graphql";
 import { User } from "../entities/User";
 import { BaseResponse, MyContext } from "../utils/types";
 import argon2 from "argon2";
+import { isAuth } from "../middleware/isAuth";
 
 @InputType()
 class UserLoginInput {
@@ -38,6 +40,7 @@ class UserResponse extends BaseResponse {
 @Resolver()
 export class UserResolver {
   @Query(() => User, { nullable: true })
+  @UseMiddleware(isAuth)
   async me(@Ctx() { req }: MyContext) {
     const userId = req.session.userId;
     // User not logged in
@@ -157,6 +160,7 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
   async logout(@Ctx() { req }: MyContext) {
     const userId = req.session.userId;
     // User not logged in
@@ -168,11 +172,12 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  user(@Arg("id", () => String) id: string): Promise<User | null> {
-    return User.findOneBy({ id });
+  async user(@Arg("id", () => String) id: string): Promise<User | null> {
+    return await User.findOneBy({ id });
   }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
   async deleteUser(@Arg("id") id: string): Promise<Boolean> {
     try {
       await User.delete({ id });

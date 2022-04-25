@@ -10,7 +10,6 @@ import session from "express-session";
 import connectRedis from "connect-redis";
 import { __prod__ } from "./utils/constants";
 import { MyContext } from "./utils/types";
-// import cors from "cors";
 import db from "./db";
 import { BookResolver } from "./resolvers/book";
 
