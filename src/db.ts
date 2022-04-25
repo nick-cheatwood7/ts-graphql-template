@@ -10,7 +10,7 @@ const AppDataSource = new DataSource({
   port: 5432,
   database: "graphql_dev",
   synchronize: !__prod__,
-  logging: !__prod__,
+  logging: !__prod__ && ["schema", "error"],
   entities: [User, Book, Author, Collection],
   migrations: ["./migrations/**/*"],
 });

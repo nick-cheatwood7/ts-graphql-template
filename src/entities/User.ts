@@ -1,6 +1,7 @@
 import { Entity, Column } from "typeorm";
 import { Field, ObjectType } from "type-graphql";
 import { CustomEntity } from "./templates/CustomEntity";
+// TODO: Add class validation for email, phone
 
 @ObjectType()
 @Entity({ name: "users" })

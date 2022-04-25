@@ -12,6 +12,7 @@ import { __prod__ } from "./utils/constants";
 import { MyContext } from "./utils/types";
 // import cors from "cors";
 import db from "./db";
+import { BookResolver } from "./resolvers/book";
 
 const main = async () => {
   await db
@@ -34,16 +35,10 @@ const main = async () => {
       console.log("⚡️ Redis db started");
     })
     .catch(() => {
-      console.error("⚠️ Unable to connect to Redis");
+      console.error("⚠️  Unable to connect to Redis");
     });
 
   app.set("trust proxy", !__prod__);
-  // app.use(
-  //   cors({
-  //     origin: "*",
-  //     credentials: true,
-  //   })
-  // );
   app.use(
     session({
       name: "qid",
@@ -65,7 +60,7 @@ const main = async () => {
 
   const server = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, UserResolver],
+      resolvers: [HelloResolver, UserResolver, BookResolver],
       validate: false,
     }),
     context: ({ req, res }): MyContext => ({

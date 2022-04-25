@@ -9,7 +9,7 @@ import {
   Resolver,
 } from "type-graphql";
 import { User } from "../entities/User";
-import { MyContext } from "../utils/types";
+import { BaseResponse, MyContext } from "../utils/types";
 import argon2 from "argon2";
 
 @InputType()
@@ -30,17 +30,7 @@ class UserRegisterInput extends UserLoginInput {
 }
 
 @ObjectType()
-class FieldError {
-  @Field()
-  field: string;
-  @Field()
-  message: string;
-}
-
-@ObjectType()
-class UserResponse {
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
+class UserResponse extends BaseResponse {
   @Field(() => User, { nullable: true })
   user?: User;
 }
