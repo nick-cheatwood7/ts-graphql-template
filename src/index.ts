@@ -12,6 +12,7 @@ import { __prod__ } from "./utils/constants";
 import { MyContext } from "./utils/types";
 import db from "./db";
 import { BookResolver } from "./resolvers/book";
+import { AuthorResolver } from "./resolvers/author";
 
 const main = async () => {
   await db
@@ -59,7 +60,7 @@ const main = async () => {
 
   const server = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, UserResolver, BookResolver],
+      resolvers: [HelloResolver, UserResolver, BookResolver, AuthorResolver],
       validate: false,
     }),
     context: ({ req, res }): MyContext => ({

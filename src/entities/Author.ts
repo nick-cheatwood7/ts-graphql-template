@@ -14,6 +14,7 @@ export class Author extends CustomEntity {
   @Column()
   lastName: string;
 
+  @Field(() => [Book], { nullable: true })
   @OneToMany(() => Book, (book) => book.author)
   books: Book[];
 }

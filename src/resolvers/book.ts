@@ -24,6 +24,8 @@ class CreateBookInput {
   title: string;
   @Field(() => Int)
   year: number;
+  @Field({ nullable: true })
+  authorId?: string;
 }
 
 @InputType()
@@ -34,9 +36,11 @@ class UpdateBookInput {
   title?: string;
   @Field(() => Int, { nullable: true })
   year?: number;
+  @Field({ nullable: true })
+  authorId?: string;
 }
 
-@Resolver()
+@Resolver(Book)
 export class BookResolver {
   // Create Book
   @Mutation(() => BookResponse, { nullable: true })
@@ -83,6 +87,7 @@ export class BookResolver {
           id: book.id,
         },
         {
+          authorId: options.authorId,
           title: options.title,
           year: options.year,
         }
@@ -107,7 +112,7 @@ export class BookResolver {
 
   // List all Books
   @Query(() => [Book], { nullable: true })
-  async getBooks(
+  async books(
     @Arg("limit") limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ): Promise<Book[]> {
