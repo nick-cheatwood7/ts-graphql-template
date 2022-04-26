@@ -1,7 +1,6 @@
 import { DataSource } from "typeorm";
 import { Author } from "./entities/Author";
 import { Book } from "./entities/Book";
-import { Collection } from "./entities/Collection";
 import { User } from "./entities/User";
 import { __prod__ } from "./utils/constants";
 
@@ -11,7 +10,7 @@ const AppDataSource = new DataSource({
   database: "graphql_dev",
   synchronize: !__prod__,
   logging: !__prod__ && ["schema", "error"],
-  entities: [User, Book, Author, Collection],
+  entities: [User, Book, Author],
   migrations: ["./migrations/**/*"],
 });
 

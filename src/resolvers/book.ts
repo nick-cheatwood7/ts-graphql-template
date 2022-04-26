@@ -1,16 +1,20 @@
 import {
   Arg,
+  Ctx,
   Field,
+  FieldResolver,
   InputType,
   Int,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  Root,
 } from "type-graphql";
 import { Book } from "../entities/Book";
-import { BaseResponse } from "../utils/types";
+import { BaseResponse, MyContext } from "../utils/types";
 import db from "../db";
+import { Author } from "../entities/Author";
 
 @ObjectType()
 class BookResponse extends BaseResponse {
@@ -42,6 +46,15 @@ class UpdateBookInput {
 
 @Resolver(Book)
 export class BookResolver {
+  @FieldResolver(() => Author, { nullable: true })
+  author(@Root() book: Book, @Ctx() { authorLoader }: MyContext) {
+    if (book.authorId !== null) {
+      return authorLoader.load(book.authorId);
+    } else {
+      return null;
+    }
+  }
+
   // Create Book
   @Mutation(() => BookResponse, { nullable: true })
   async createBook(

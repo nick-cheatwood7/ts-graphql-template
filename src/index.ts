@@ -13,6 +13,7 @@ import { MyContext } from "./utils/types";
 import db from "./db";
 import { BookResolver } from "./resolvers/book";
 import { AuthorResolver } from "./resolvers/author";
+import { createAuthorLoader } from "./loaders/AuthorLoader";
 
 const main = async () => {
   await db
@@ -66,6 +67,7 @@ const main = async () => {
     context: ({ req, res }): MyContext => ({
       req,
       res,
+      authorLoader: createAuthorLoader(),
     }),
   });
 

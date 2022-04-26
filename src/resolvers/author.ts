@@ -35,7 +35,7 @@ class UpdateAuthorInput {
   lastName?: string;
 }
 
-@Resolver()
+@Resolver(Author)
 export class AuthorResolver {
   // Create Author
   @Mutation(() => AuthorResponse, { nullable: true })
