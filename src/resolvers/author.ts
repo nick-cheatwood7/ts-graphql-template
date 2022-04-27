@@ -1,14 +1,18 @@
 import {
   Arg,
+  Ctx,
   Field,
+  FieldResolver,
   InputType,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  Root,
 } from "type-graphql";
 import { Author } from "../entities/Author";
-import { BaseResponse } from "../utils/types";
+import { Book } from "../entities/Book";
+import { BaseResponse, MyContext } from "../utils/types";
 import db from "../db";
 
 @ObjectType()
@@ -37,6 +41,15 @@ class UpdateAuthorInput {
 
 @Resolver(Author)
 export class AuthorResolver {
+  @FieldResolver(() => [Book], { nullable: true })
+  books(@Root() author: Author, @Ctx() { bookLoader }: MyContext) {
+    if (author.books?.length > 0) {
+      return bookLoader.loadMany(author.books as any);
+    } else {
+      return null;
+    }
+  }
+
   // Create Author
   @Mutation(() => AuthorResponse, { nullable: true })
   async createAuthor(
@@ -114,6 +127,7 @@ export class AuthorResolver {
     const qb = db
       .getRepository(Author)
       .createQueryBuilder("a")
+      .loadAllRelationIds({ relations: ["books"] })
       .orderBy('"createdAt"', "DESC")
       .take(realLimit);
     if (cursor) {

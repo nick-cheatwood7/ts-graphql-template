@@ -14,6 +14,7 @@ import db from "./db";
 import { BookResolver } from "./resolvers/book";
 import { AuthorResolver } from "./resolvers/author";
 import { createAuthorLoader } from "./loaders/AuthorLoader";
+import { createBookLoader } from "./loaders/BookLoader";
 
 const main = async () => {
   await db
@@ -68,6 +69,7 @@ const main = async () => {
       req,
       res,
       authorLoader: createAuthorLoader(),
+      bookLoader: createBookLoader(),
     }),
   });
 

@@ -1,11 +1,13 @@
 import { Request, Response } from "express";
 import { createAuthorLoader } from "../loaders/AuthorLoader";
 import { Field, ObjectType } from "type-graphql";
+import { createBookLoader } from "../loaders/BookLoader";
 
 export type MyContext = {
   req: Request;
   res: Response;
   authorLoader: ReturnType<typeof createAuthorLoader>;
+  bookLoader: ReturnType<typeof createBookLoader>;
 };
 
 // Used to store session data
