@@ -1,12 +1,13 @@
-import { Connection, EntityManager, IDatabaseDriver } from "@mikro-orm/core";
 import { Request, Response } from "express";
-import { createUserLoader } from "src/loaders/UserLoader";
+import { createAuthorLoader } from "../loaders/AuthorLoader";
+import { Field, ObjectType } from "type-graphql";
+import { createBookLoader } from "../loaders/BookLoader";
 
 export type MyContext = {
-  em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>;
   req: Request;
   res: Response;
-  userLoader: ReturnType<typeof createUserLoader>;
+  authorLoader: ReturnType<typeof createAuthorLoader>;
+  bookLoader: ReturnType<typeof createBookLoader>;
 };
 
 // Used to store session data
@@ -14,4 +15,18 @@ declare module "express-session" {
   interface SessionData {
     userId?: string;
   }
+}
+
+@ObjectType()
+class FieldError {
+  @Field()
+  field: string;
+  @Field()
+  message: string;
+}
+
+@ObjectType()
+export class BaseResponse {
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
 }

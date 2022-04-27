@@ -7,10 +7,12 @@ import {
   ObjectType,
   Query,
   Resolver,
+  UseMiddleware,
 } from "type-graphql";
 import { User } from "../entities/User";
-import { MyContext } from "../utils/types";
+import { BaseResponse, MyContext } from "../utils/types";
 import argon2 from "argon2";
+import { isAuth } from "../middleware/isAuth";
 
 @InputType()
 class UserLoginInput {
@@ -30,17 +32,7 @@ class UserRegisterInput extends UserLoginInput {
 }
 
 @ObjectType()
-class FieldError {
-  @Field()
-  field: string;
-  @Field()
-  message: string;
-}
-
-@ObjectType()
-class UserResponse {
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
+class UserResponse extends BaseResponse {
   @Field(() => User, { nullable: true })
   user?: User;
 }
@@ -48,20 +40,21 @@ class UserResponse {
 @Resolver()
 export class UserResolver {
   @Query(() => User, { nullable: true })
-  async me(@Ctx() { em, req }: MyContext) {
+  @UseMiddleware(isAuth)
+  async me(@Ctx() { req }: MyContext) {
     const userId = req.session.userId;
     // User not logged in
     if (!userId) {
       return null;
     }
-    const user = await em.findOne(User, { id: userId });
+    const user = await User.findOneBy({ id: userId });
     return user;
   }
 
   @Mutation(() => UserResponse, { nullable: true })
   async register(
     @Arg("options") options: UserRegisterInput,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     if (options.email.length < 3) {
       return {
@@ -104,14 +97,14 @@ export class UserResolver {
       };
     }
     const hashedPassword = await argon2.hash(options.password);
-    const user = em.create(User, {
+    const user = User.create({
       firstName: options.firstName,
       lastName: options.lastName,
       email: options.email,
       password: hashedPassword,
     });
     try {
-      await em.persistAndFlush(user);
+      await user.save();
     } catch (err) {
       // duplicate email error
       if (err.code === "23505") {
@@ -133,9 +126,9 @@ export class UserResolver {
   @Mutation(() => UserResponse, { nullable: true })
   async login(
     @Arg("options") options: UserLoginInput,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
-    const user = await em.findOne(User, {
+    const user = await User.findOneBy({
       email: options.email.toLowerCase(),
     });
     if (!user) {
@@ -167,6 +160,7 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
   async logout(@Ctx() { req }: MyContext) {
     const userId = req.session.userId;
     // User not logged in
@@ -178,20 +172,15 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  user(
-    @Arg("id", () => String) id: string,
-    @Ctx() { em }: MyContext
-  ): Promise<User | null> {
-    return em.findOne(User, { id });
+  async user(@Arg("id", () => String) id: string): Promise<User | null> {
+    return await User.findOneBy({ id });
   }
 
   @Mutation(() => Boolean)
-  async deleteUser(
-    @Arg("id") id: string,
-    @Ctx() { em }: MyContext
-  ): Promise<Boolean> {
+  @UseMiddleware(isAuth)
+  async deleteUser(@Arg("id") id: string): Promise<Boolean> {
     try {
-      await em.nativeDelete(User, { id });
+      await User.delete({ id });
       return true;
     } catch {
       return false;
